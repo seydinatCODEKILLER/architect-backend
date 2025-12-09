@@ -1,0 +1,434 @@
+
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// --------------------
+// Utilisateur (Better-Auth compatible)
+// --------------------
+model User {
+  id              String         @id @default(auto()) @map("_id") @db.ObjectId
+  email           String         @unique
+  emailVerified   Boolean        @default(false)
+  
+  // Nom complet séparé
+  firstName       String?
+  lastName        String?
+  
+  // Avatar
+  avatarUrl       String?
+  
+  // Métadonnées Better-Auth
+  authProvider    String?        
+  authProviderId  String?        
+  
+  // Pour la migration depuis d'autres systèmes
+  legacyPassword  String?       
+  
+  // Relations
+  architectures   Architecture[]
+  userSettings    UserSettings?
+  uploadedFiles   UploadedFile[]
+  activityLogs    ActivityLog[]
+  proposedADRs    ArchitectureDecisionRecord[] @relation("ProposedADRs")
+  reviewedADRs    ArchitectureDecisionRecord[] @relation("ReviewedADRs")
+  receivedCloneInvitations CloneInvitation[] @relation("InvitedUser")
+  comments        Comment[]      // opposite relation for Comment.user
+  stars           Star[]         // opposite relation for Star.user
+  
+  // Timestamps (Better-Auth utilise souvent ces champs)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  lastLoginAt     DateTime?
+
+  @@map("users")
+  @@index([authProvider, authProviderId])
+}
+
+// --------------------
+// Paramètres utilisateur
+// --------------------
+model UserSettings {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String   @db.ObjectId @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Préférences d'interface
+  theme             String   @default("system")  
+  editorFontSize    Int      @default(14)
+  editorTheme       String   @default("vs-dark")
+  language          String   @default("fr")      
+  
+  // Préférences de travail
+  autoSave          Boolean  @default(true)
+  saveInterval      Int      @default(5000)
+  defaultView       String   @default("editor") 
+  
+  // Notifications
+  emailNotifications Boolean @default(true)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("user_settings")
+}
+
+// --------------------
+// Architecture principale
+// --------------------
+model Architecture {
+  id              String        @id @default(auto()) @map("_id") @db.ObjectId
+  slug            String        @unique
+  title           String
+  description     String?
+  
+  // Visibilité
+  visibility      Visibility    @default(Private)
+  
+  // Stack et tags
+  techStack       String[]
+  tags            String[]
+  
+  // Contexte et objectifs
+  projectContext  String?
+  objectives      String?
+  
+  // Stats
+  views           Int           @default(0)
+  clones          Int           @default(0)
+  likes           Int           @default(0)
+  
+  // Contenu principal (embeddé pour performance)
+  fileTree        Json?         
+  documentation   String?       
+  
+  // Métadonnées
+  isTemplate      Boolean       @default(false)
+  license         String?       @default("MIT")
+  
+  // Relations
+  userId          String        @db.ObjectId
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Sous-éléments
+  diagrams        Diagram[]
+  adrs            ArchitectureDecisionRecord[]
+  comments        Comment[]
+  activityLogs    ActivityLog[]
+  uploadedFiles   UploadedFile[]
+  stars           Star[]        // opposite relation for Star.architecture
+  sourceCloneInvitations  CloneInvitation[] @relation("source_clones")
+  targetCloneInvitations  CloneInvitation[] @relation("target_clones")
+  
+  // Timestamps
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  lastEditedAt    DateTime      @default(now())
+  publishedAt     DateTime?
+
+  @@map("architectures")
+  @@index([userId])
+  @@index([visibility])
+  @@index([createdAt])
+  @@index([tags])
+  @@fulltext([title, description, projectContext])
+}
+
+enum Visibility {
+  Private
+  Unlisted    
+  Public      
+}
+
+// --------------------
+// Diagrammes Mermaid
+// --------------------
+model Diagram {
+  id              String        @id @default(auto()) @map("_id") @db.ObjectId
+  architectureId  String        @db.ObjectId
+  architecture    Architecture  @relation(fields: [architectureId], references: [id], onDelete: Cascade)
+  
+  title           String
+  description     String?
+  
+  type            DiagramType   @default(Flowchart)
+  mermaidCode     String
+  config          Json?         
+  
+  // Relations
+  comments        Comment[]     
+
+  // Métadonnées
+  position        Int           @default(0)     
+  width           Int           @default(800)
+  height          Int           @default(600)
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("diagrams")
+  @@index([architectureId])
+  @@index([type])
+}
+
+enum DiagramType {
+  Flowchart
+  Sequence
+  Class
+  ER
+  State
+  Gantt
+  Pie
+  Timeline
+  Quadrant
+  Mindmap
+}
+
+// --------------------
+// Architecture Decision Records (ADR)
+// --------------------
+model ArchitectureDecisionRecord {
+  id              String        @id  @default(auto()) @map("_id") @db.ObjectId
+  architectureId  String        @db.ObjectId
+  architecture    Architecture  @relation(fields: [architectureId], references: [id], onDelete: Cascade)
+  
+  title           String
+  status          ADRStatus     @default(Proposed)
+  
+  // Contenu structuré
+  context         String
+  decisionDrivers String?       // Facteurs influençant la décision
+  consideredOptions String?     // Options considérées
+  decision        String
+  consequences    String
+  implementationNotes String?   // Notes d'implémentation
+  
+  // Métadonnées
+  number          Int           // Numéro séquentiel (ADR-001)
+  supersededById  String?       // ADR qui remplace celle-ci
+  
+  // Participants
+  proposedById    String?       @db.ObjectId
+  proposedBy      User?         @relation("ProposedADRs", fields: [proposedById], references: [id])
+  reviewedById    String?       @db.ObjectId
+  reviewedBy      User?         @relation("ReviewedADRs", fields: [reviewedById], references: [id])
+
+  // Comments relation (opposite of Comment.adr)
+  comments        Comment[]
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  decisionDate    DateTime?
+
+  @@map("adrs")
+  @@index([architectureId])
+  @@index([architectureId, number])
+  @@index([status])
+  @@index([proposedById])
+}
+
+enum ADRStatus {
+  Draft
+  Proposed
+  Accepted
+  Implemented
+  Superseded
+  Deprecated
+  Rejected
+}
+
+// --------------------
+// Fichiers uploadés (pour avatars, images, etc.)
+// --------------------
+model UploadedFile {
+  id              String        @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String        @db.ObjectId
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  architectureId  String?       @db.ObjectId
+  architecture    Architecture? @relation(fields: [architectureId], references: [id], onDelete: Cascade)
+  
+  // Infos fichier
+  filename        String
+  originalName    String
+  mimeType        String
+  size            Int           // en bytes
+  key             String        @unique // Clé dans le storage (S3/R2/etc.)
+  
+  // Métadonnées
+  description     String?
+  tags            String[]
+  
+  // URLs
+  url             String        // URL publique
+  thumbnailUrl    String?       // Pour les images
+  
+  // Sécurité
+  visibility      Visibility    @default(Private)
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("uploaded_files")
+  @@index([userId])
+  @@index([architectureId])
+  @@index([visibility])
+  @@index([mimeType])
+}
+
+// --------------------
+// Historique des actions
+// --------------------
+model ActivityLog {
+  id              String        @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String        @db.ObjectId
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  architectureId  String?       @db.ObjectId
+  architecture    Architecture? @relation(fields: [architectureId], references: [id], onDelete: Cascade)
+  
+  // Action
+  action          ActivityAction
+  entityType      String        // "architecture", "diagram", "adr", etc.
+  entityId        String?
+  
+  // Données supplémentaires
+  details         Json?         // {oldValue: "...", newValue: "..."}
+  message         String?
+  ipAddress       String?
+  
+  createdAt       DateTime      @default(now())
+
+  @@map("activity_logs")
+  @@index([userId])
+  @@index([architectureId])
+  @@index([createdAt])
+  @@index([action])
+}
+
+enum ActivityAction {
+  // Architecture
+  ARCHITECTURE_CREATE
+  ARCHITECTURE_UPDATE
+  ARCHITECTURE_DELETE
+  ARCHITECTURE_CLONE
+  ARCHITECTURE_PUBLISH
+  ARCHITECTURE_UNPUBLISH
+  
+  // Diagram
+  DIAGRAM_CREATE
+  DIAGRAM_UPDATE
+  DIAGRAM_DELETE
+  
+  // ADR
+  ADR_CREATE
+  ADR_UPDATE
+  ADR_STATUS_CHANGE
+  
+  // File Tree
+  FILETREE_UPDATE
+  
+  // Documentation
+  DOCUMENTATION_UPDATE
+  
+  // Vue
+  ARCHITECTURE_VIEW
+}
+
+// --------------------
+// Invitations / Clonage
+// --------------------
+model CloneInvitation {
+  id              String        @id @default(auto()) @map("_id") @db.ObjectId
+  sourceArchitectureId String   @db.ObjectId
+  sourceArchitecture Architecture @relation("source_clones", fields: [sourceArchitectureId], references: [id], onDelete: Cascade)
+  
+  targetArchitectureId String?    @db.ObjectId
+  targetArchitecture Architecture? @relation("target_clones", fields: [targetArchitectureId], references: [id], onDelete: Cascade)
+  invitedUserId   String?         @db.ObjectId
+  invitedUser     User?         @relation("InvitedUser", fields: [invitedUserId], references: [id], onDelete: SetNull)
+  
+  invitedEmail    String?
+  token           String        @unique
+  
+  status          InvitationStatus @default(Pending)
+  
+  expiresAt       DateTime
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("clone_invitations")
+  @@index([sourceArchitectureId])
+  @@index([invitedEmail])
+  @@index([expiresAt])
+  @@index([status])
+}
+
+enum InvitationStatus {
+  Pending
+  Accepted
+  Declined
+  Expired
+  Revoked
+}
+
+// --------------------
+// Modèles pour la V2 (préparation)
+// --------------------
+model Comment {
+  id              String        @id @default(auto()) @map("_id") @db.ObjectId
+  content         String
+  
+  // Relation parent/enfant pour les threads
+  parentId        String?       @db.ObjectId
+  parent          Comment?      @relation("CommentReplies", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replies         Comment[]     @relation("CommentReplies")
+  
+  // Cible du commentaire
+  architectureId  String?       @db.ObjectId
+  architecture    Architecture? @relation(fields: [architectureId], references: [id], onDelete: Cascade)
+  
+  diagramId       String?        @db.ObjectId
+  diagram         Diagram?      @relation(fields: [diagramId], references: [id], onDelete: Cascade)
+  
+  adrId           String?       @db.ObjectId
+  adr             ArchitectureDecisionRecord? @relation(fields: [adrId], references: [id], onDelete: Cascade)
+  
+  // Auteur
+  userId          String         @db.ObjectId
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Métadonnées
+  isEdited        Boolean       @default(false)
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("comments")
+  @@index([architectureId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Star {
+  id              String        @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String        @db.ObjectId
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  architectureId  String         @db.ObjectId
+  architecture    Architecture  @relation(fields: [architectureId], references: [id], onDelete: Cascade)
+  
+  createdAt       DateTime      @default(now())
+
+  @@map("stars")
+  @@unique([userId, architectureId])
+  @@index([architectureId])
+  @@index([userId])
+}
