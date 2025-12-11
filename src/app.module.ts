@@ -8,6 +8,7 @@ import { DatabaseModule } from './database/database.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    ConfigModule,
     DatabaseModule,
   ],
   controllers: [],
