@@ -6,6 +6,10 @@ import { BrevoModule } from './brevo.module';
 import { QueueModule } from '../queue/queue.module';
 import { BrevoService } from '../services/brevo.service';
 import { EmailQueueService } from '../queue/email-queue.service';
+import { CookieModule } from './cookie.module';
+import { FileValidationModule } from './file-validation.module';
+import { CookieService } from '../services/cookie.service';
+import { FileValidationService } from '../services/file-validation.service';
 
 @Global()
 @Module({
@@ -18,12 +22,22 @@ import { EmailQueueService } from '../queue/email-queue.service';
     CloudinaryModule,
     BrevoModule,
     QueueModule,
+    CookieModule,
+    FileValidationModule,
   ],
-  providers: [CloudinaryService, BrevoService, EmailQueueService],
+  providers: [
+    CloudinaryService,
+    BrevoService,
+    EmailQueueService,
+    CookieService,
+    FileValidationService,
+  ],
   exports: [
     CloudinaryService,
     BrevoService,
     EmailQueueService,
+    CookieService,
+    FileValidationService,
     NestConfigModule,
   ],
 })

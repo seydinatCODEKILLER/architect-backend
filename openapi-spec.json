@@ -1,0 +1,1011 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "description": "Creates a new user account with email and password validation.",
+        "operationId": "register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Email already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Register a new user",
+        "tags": [
+          "🔐 Authentication"
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "description": "Authenticates a user with email and password.",
+        "operationId": "login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials or email not verified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Authenticate user",
+        "tags": [
+          "🔐 Authentication"
+        ]
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "description": "Logs out the current user session and clears authentication cookies.",
+        "operationId": "logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Logout successful"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          },
+          {
+            "cookie-auth": []
+          }
+        ],
+        "summary": "Logout current session",
+        "tags": [
+          "🔐 Authentication",
+          "🔐 Authentication"
+        ]
+      }
+    },
+    "/api/auth/logout/all": {
+      "post": {
+        "description": "Logs out the user from all devices and clears all active sessions.",
+        "operationId": "logoutAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Logged out from all devices",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Logged out from all devices"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          },
+          {
+            "cookie-auth": []
+          }
+        ],
+        "summary": "Logout from all devices",
+        "tags": [
+          "🔐 Authentication",
+          "🔐 Authentication"
+        ]
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "description": "Refreshes the access token using a valid refresh token.",
+        "operationId": "refreshTokens",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tokens refreshed successfully"
+          },
+          "401": {
+            "description": "Invalid or expired refresh token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Refresh access token",
+        "tags": [
+          "🔐 Authentication"
+        ]
+      }
+    },
+    "/api/auth/sessions": {
+      "get": {
+        "description": "Retrieves all active sessions for the current user.",
+        "operationId": "getSessions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Sessions retrieved successfully"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          },
+          {
+            "cookie-auth": []
+          }
+        ],
+        "summary": "Get user sessions",
+        "tags": [
+          "🔐 Authentication",
+          "🔐 Authentication"
+        ]
+      }
+    },
+    "/api/auth/sessions/{sessionId}": {
+      "delete": {
+        "description": "Revokes a specific session by its ID.",
+        "operationId": "revokeSession",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "required": true,
+            "in": "path",
+            "description": "Session ID to revoke",
+            "schema": {
+              "example": "session_123abc",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session revoked successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Session revoked"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          },
+          {
+            "cookie-auth": []
+          }
+        ],
+        "summary": "Revoke specific session",
+        "tags": [
+          "🔐 Authentication",
+          "🔐 Authentication"
+        ]
+      }
+    },
+    "/api/auth/verify-email": {
+      "get": {
+        "description": "Verifies a user's email address using a verification token.",
+        "operationId": "verifyEmail",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "query",
+            "description": "Email verification token",
+            "schema": {
+              "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Email verified successfully"
+          },
+          "400": {
+            "description": "Invalid or expired token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Verify email address",
+        "tags": [
+          "🔐 Authentication"
+        ]
+      }
+    },
+    "/api/auth/forgot-password": {
+      "post": {
+        "description": "Sends a password reset email to the provided email address.",
+        "operationId": "forgotPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset email sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Password reset email sent"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Request password reset",
+        "tags": [
+          "🔐 Authentication",
+          "🔐 Authentication"
+        ]
+      }
+    },
+    "/api/auth/reset-password": {
+      "post": {
+        "description": "Resets user password using a reset token.",
+        "operationId": "resetPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid token or weak password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Reset password",
+        "tags": [
+          "🔐 Authentication"
+        ]
+      }
+    },
+    "/api/auth/change-password": {
+      "put": {
+        "description": "Changes the password for the authenticated user.",
+        "operationId": "changePassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password changed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Passwords do not match or weak password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Current password is incorrect",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          },
+          {
+            "cookie-auth": []
+          }
+        ],
+        "summary": "Change password",
+        "tags": [
+          "🔐 Authentication",
+          "🔐 Authentication"
+        ]
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "description": "Returns the currently authenticated user.",
+        "operationId": "getCurrentUser",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "User retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "User retrieved successfully"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user": {
+                          "$ref": "#/components/schemas/AuthUserResponse"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          },
+          {
+            "cookie-auth": []
+          }
+        ],
+        "summary": "Get current user",
+        "tags": [
+          "🔐 Authentication",
+          "🔐 Authentication"
+        ]
+      }
+    },
+    "/api/auth/profile": {
+      "get": {
+        "description": "Retrieves the complete profile of the current user with statistics.",
+        "operationId": "getProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Profile retrieved successfully"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          },
+          {
+            "cookie-auth": []
+          }
+        ],
+        "summary": "Get user profile",
+        "tags": [
+          "🔐 Authentication",
+          "🔐 Authentication"
+        ]
+      },
+      "put": {
+        "description": "Updates the profile information of the authenticated user.",
+        "operationId": "updateProfile",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Profile updated successfully"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user": {
+                          "$ref": "#/components/schemas/AuthUserResponse"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          },
+          {
+            "cookie-auth": []
+          }
+        ],
+        "summary": "Update user profile",
+        "tags": [
+          "🔐 Authentication",
+          "🔐 Authentication"
+        ]
+      }
+    },
+    "/api/auth/avatar": {
+      "post": {
+        "description": "Uploads a new avatar image for the user.",
+        "operationId": "uploadAvatar",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "avatar": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Image file (JPEG, PNG, GIF, WebP) - Max 5MB"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Avatar uploaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Avatar updated successfully"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "avatarUrl": {
+                          "type": "string",
+                          "example": "https://cloudinary.com/avatar.jpg"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid file type or size",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          },
+          {
+            "cookie-auth": []
+          }
+        ],
+        "summary": "Upload avatar",
+        "tags": [
+          "🔐 Authentication",
+          "🔐 Authentication"
+        ]
+      },
+      "delete": {
+        "description": "Removes the current avatar of the authenticated user.",
+        "operationId": "removeAvatar",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Avatar removed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Avatar removed successfully"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          },
+          {
+            "cookie-auth": []
+          }
+        ],
+        "summary": "Remove avatar",
+        "tags": [
+          "🔐 Authentication",
+          "🔐 Authentication"
+        ]
+      }
+    },
+    "/api/auth/stats": {
+      "get": {
+        "description": "Retrieves global authentication statistics.",
+        "operationId": "getAuthStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Statistics retrieved successfully"
+          }
+        },
+        "summary": "Get auth statistics",
+        "tags": [
+          "🔐 Authentication"
+        ]
+      }
+    },
+    "/api/auth/check-email": {
+      "get": {
+        "description": "Checks if an email address is already registered.",
+        "operationId": "checkEmailExists",
+        "parameters": [
+          {
+            "name": "email",
+            "required": true,
+            "in": "query",
+            "description": "Email address to check",
+            "schema": {
+              "example": "john.doe@example.com",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Email check completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailExistsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Email parameter missing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Check if email exists",
+        "tags": [
+          "🔐 Authentication"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "🏗️ Architect API",
+    "description": "\n# Architect - API Documentation\n\n## 📋 Description\nSaaS application for developers to create, document and share technical architectures.\n\n## 🔐 Authentication\nThis API uses JWT tokens for authentication. Two methods are available:\n\n### 1. Bearer Token (Recommended for API clients)\n```\nAuthorization: Bearer <your-jwt-token>\n```\n\n### 2. HTTP-only Cookies (Recommended for web browsers)\nCookies are automatically managed by the browser:\n- `access_token`: JWT access token\n- `refresh_token`: JWT refresh token\n- `session_active`: Session status flag\n\n## 📝 Response Format\nAll responses follow the same format:\n```json\n{\n  \"message\": \"Operation completed successfully\",\n  \"data\": {\n    // Response data\n  }\n}\n```\n\n## ⚠️ Error Format\nErrors also follow a standardized format:\n```json\n{\n  \"statusCode\": 400,\n  \"message\": \"Error description\",\n  \"error\": \"Error Type\",\n  \"timestamp\": \"2024-01-15T10:30:00.000Z\",\n  \"path\": \"/api/auth/endpoint\"\n}\n```\n\n## 🚀 Version: 1.0.0\n    ",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Architect Team",
+      "url": "https://github.com/yourusername/architect",
+      "email": "contact@architect.dev"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "tags": [
+    {
+      "name": "🔐 Authentication",
+      "description": "User registration, login, and session management"
+    },
+    {
+      "name": "👤 Profile",
+      "description": "User profile management and avatar upload"
+    },
+    {
+      "name": "🔄 Sessions",
+      "description": "Active session management"
+    },
+    {
+      "name": "🔑 Password",
+      "description": "Password reset and change operations"
+    },
+    {
+      "name": "📧 Verification",
+      "description": "Email verification endpoints"
+    },
+    {
+      "name": "📊 Statistics",
+      "description": "Authentication statistics"
+    }
+  ],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "JWT-auth": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http",
+        "name": "JWT",
+        "description": "Enter JWT token",
+        "in": "header"
+      },
+      "cookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "access_token",
+        "description": "HTTP-only cookie containing JWT access token"
+      }
+    },
+    "schemas": {
+      "RegisterDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ValidationErrorResponse": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "number",
+            "example": 400,
+            "description": "HTTP status code"
+          },
+          "message": {
+            "example": [
+              "password must be at least 8 characters"
+            ],
+            "description": "Validation errors",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "error": {
+            "type": "string",
+            "example": "Bad Request",
+            "description": "Error type"
+          },
+          "timestamp": {
+            "type": "string",
+            "example": "2024-01-15T10:30:00.000Z",
+            "description": "Timestamp"
+          },
+          "path": {
+            "type": "string",
+            "example": "/api/auth/register",
+            "description": "Request path"
+          }
+        },
+        "required": [
+          "statusCode",
+          "message",
+          "error",
+          "timestamp",
+          "path"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "number",
+            "example": 400,
+            "description": "HTTP status code"
+          },
+          "message": {
+            "type": "string",
+            "example": "Invalid email or password",
+            "description": "Error message"
+          },
+          "error": {
+            "type": "string",
+            "example": "Bad Request",
+            "description": "Error type"
+          },
+          "timestamp": {
+            "type": "string",
+            "example": "2024-01-15T10:30:00.000Z",
+            "description": "Timestamp"
+          },
+          "path": {
+            "type": "string",
+            "example": "/api/auth/login",
+            "description": "Request path"
+          }
+        },
+        "required": [
+          "statusCode",
+          "message",
+          "error",
+          "timestamp",
+          "path"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "RefreshTokenDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ForgotPasswordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ResetPasswordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Operation completed successfully",
+            "description": "Success message"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "ChangePasswordDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateProfileDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "EmailExistsResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Email check completed",
+            "description": "Message"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "exists": {
+                "type": "boolean",
+                "example": true
+              }
+            }
+          }
+        },
+        "required": [
+          "message",
+          "data"
+        ]
+      }
+    }
+  }
+}

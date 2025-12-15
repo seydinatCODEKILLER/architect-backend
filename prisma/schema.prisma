@@ -72,6 +72,9 @@ model User {
   id              String         @id @default(cuid())
   email           String         @unique
   emailVerified   Boolean        @default(false)
+
+  // Mot de passe haché (pour les utilisateurs legacy)
+  password        String?
   
   // Nom complet
   firstName       String?
@@ -96,6 +99,8 @@ model User {
   comments        Comment[]
   stars           Star[]
   session         Session[]
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens PasswordResetToken[]
   
   // Timestamps
   createdAt       DateTime       @default(now())
@@ -440,19 +445,50 @@ model Star {
 // Sessions (pour Better-Auth)
 // --------------------
 model Session {
-  id              String        @id @default(cuid())
-  userId          String
-  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  token           String        @unique
-  userAgent       String?
-  ipAddress       String?
-  
-  expiresAt       DateTime
-  createdAt       DateTime      @default(now())
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshToken String   @unique
+  userAgent    String?
+  ipAddress    String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  lastUsedAt   DateTime @default(now())
 
   @@map("sessions")
   @@index([userId])
+  @@index([refreshToken])
   @@index([expiresAt])
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("email_verification_tokens")
+  @@index([userId])
   @@index([token])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("password_reset_tokens")
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@index([used])
 }
