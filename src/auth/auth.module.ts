@@ -1,4 +1,9 @@
-import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
+import {
+  Module,
+  NestModule,
+  MiddlewareConsumer,
+  RequestMethod,
+} from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -53,7 +58,9 @@ export class AuthModule implements NestModule {
    */
   configure(consumer: MiddlewareConsumer) {
     // Appliquer le middleware de cookies à toutes les routes
-    consumer.apply(CookieMiddleware).forRoutes('*');
+    consumer
+      .apply(CookieMiddleware)
+      .forRoutes({ path: 'auth/*path', method: RequestMethod.ALL });
 
     // Appliquer le rate limiting aux routes d'authentification
     consumer

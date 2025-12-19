@@ -822,26 +822,6 @@
     {
       "name": "🔐 Authentication",
       "description": "User registration, login, and session management"
-    },
-    {
-      "name": "👤 Profile",
-      "description": "User profile management and avatar upload"
-    },
-    {
-      "name": "🔄 Sessions",
-      "description": "Active session management"
-    },
-    {
-      "name": "🔑 Password",
-      "description": "Password reset and change operations"
-    },
-    {
-      "name": "📧 Verification",
-      "description": "Email verification endpoints"
-    },
-    {
-      "name": "📊 Statistics",
-      "description": "Authentication statistics"
     }
   ],
   "servers": [],
@@ -1004,6 +984,76 @@
         "required": [
           "message",
           "data"
+        ]
+      },
+      "AuthUserResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "user_123abc",
+            "description": "User unique ID"
+          },
+          "email": {
+            "type": "string",
+            "example": "john.doe@example.com",
+            "description": "User email"
+          },
+          "firstName": {
+            "type": "string",
+            "example": "John",
+            "description": "First name"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Doe",
+            "description": "Last name"
+          },
+          "displayName": {
+            "type": "string",
+            "example": "John Doe",
+            "description": "Display name"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "example": "https://cloudinary.com/avatar.jpg",
+            "description": "Avatar URL"
+          },
+          "emailVerified": {
+            "type": "boolean",
+            "example": true,
+            "description": "Email verification status"
+          },
+          "authProvider": {
+            "type": "string",
+            "example": "email",
+            "description": "Auth provider"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-01-15T10:30:00.000Z",
+            "description": "Creation date"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-01-15T10:30:00.000Z",
+            "description": "Last update date"
+          },
+          "lastLoginAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2024-01-15T10:30:00.000Z",
+            "description": "Last login date"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "emailVerified",
+          "createdAt",
+          "updatedAt"
         ]
       }
     }

@@ -91,7 +91,6 @@ export class CloudinaryService implements OnModuleInit {
         resource_type: options.resource_type || 'auto',
         transformation: options.transformation,
         tags: options.tags,
-        upload_preset: this.uploadPreset,
       };
 
       const uploadStream = cloudinary.uploader.upload_stream(
@@ -130,7 +129,6 @@ export class CloudinaryService implements OnModuleInit {
         resource_type: options.resource_type || 'auto',
         transformation: options.transformation,
         tags: options.tags,
-        upload_preset: this.uploadPreset,
       });
 
       this.logger.log(`URL uploaded: ${result.public_id}`);

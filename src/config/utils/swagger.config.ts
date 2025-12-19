@@ -2,6 +2,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { INestApplication } from '@nestjs/common';
 import { writeFileSync } from 'fs';
 import { join } from 'path';
+import { AuthUserResponse } from 'src/common/dto/swagger.dto';
 
 export function setupSwagger(app: INestApplication): void {
   const config = new DocumentBuilder()
@@ -81,17 +82,12 @@ Errors also follow a standardized format:
       '🔐 Authentication',
       'User registration, login, and session management',
     )
-    .addTag('👤 Profile', 'User profile management and avatar upload')
-    .addTag('🔄 Sessions', 'Active session management')
-    .addTag('🔑 Password', 'Password reset and change operations')
-    .addTag('📧 Verification', 'Email verification endpoints')
-    .addTag('📊 Statistics', 'Authentication statistics')
     .build();
 
   const document = SwaggerModule.createDocument(app, config, {
     operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
     deepScanRoutes: true,
-    extraModels: [],
+    extraModels: [AuthUserResponse],
   });
 
   // Save OpenAPI spec for external tools

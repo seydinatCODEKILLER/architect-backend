@@ -7,7 +7,7 @@ export class PasswordUtil {
   private readonly saltRounds: number;
 
   constructor(private readonly configService: ConfigService) {
-    this.saltRounds = this.configService.get<number>('BCRYPT_SALT_ROUNDS', 10);
+    this.saltRounds = Number(this.configService.get('BCRYPT_SALT_ROUNDS', 10));
   }
 
   /**
